@@ -86,7 +86,7 @@ Test-PodCIDR($podCIDR)
 
 # Main
 
-RegisterNode
+RegisterNode $false $hostName
 $podCIDR = Get-PodCIDR $hostName
 
 # startup the service
