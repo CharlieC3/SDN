@@ -1,5 +1,5 @@
 Param(
-    $clusterCIDR="192.168.0.0/16",
+    $clusterCIDR="172.20.0.0/16",
     $NetworkMode = "L2Bridge",
     $NetworkName = "l2bridge",
     [ValidateSet("process", "hyperv")]
@@ -8,8 +8,9 @@ Param(
 
 # Todo : Get these values using kubectl
 $KubeDnsSuffix ="svc.cluster.local"
-$KubeDnsServiceIp="11.0.0.10"
-$serviceCIDR="11.0.0.0/8"
+$KubeDnsServiceIp="172.20.0.10"
+$serviceCIDR="172.20.0.0/16"
+$hostName=$(curl http://169.254.169.254/latest/meta-data/hostname | Select-Object -Expand Content)
 
 $WorkingDir = "c:\k"
 $CNIPath = [Io.path]::Combine($WorkingDir , "cni")
@@ -86,7 +87,7 @@ Test-PodCIDR($podCIDR)
 # Main
 
 RegisterNode
-$podCIDR = Get-PodCIDR
+$podCIDR = Get-PodCIDR $hostName
 
 # startup the service
 $podGW = Get-PodGateway $podCIDR
@@ -114,7 +115,7 @@ Update-CNIConfig $podCIDR
 
 if ($IsolationType -ieq "process")
 {
-    c:\k\kubelet.exe --hostname-override=$(hostname) --v=6 `
+    c:\k\kubelet.exe --hostname-override=$hostName --v=6 `
         --pod-infra-container-image=kubeletwin/pause --resolv-conf="" `
         --allow-privileged=true --enable-debugging-handlers `
         --cluster-dns=$KubeDnsServiceIp --cluster-domain=cluster.local `
@@ -125,7 +126,7 @@ if ($IsolationType -ieq "process")
 }
 elseif ($IsolationType -ieq "hyperv")
 {
-    c:\k\kubelet.exe --hostname-override=$(hostname) --v=6 `
+    c:\k\kubelet.exe --hostname-override=$hostName --v=6 `
         --pod-infra-container-image=kubeletwin/pause --resolv-conf="" `
         --allow-privileged=true --enable-debugging-handlers `
         --cluster-dns=$KubeDnsServiceIp --cluster-domain=cluster.local `

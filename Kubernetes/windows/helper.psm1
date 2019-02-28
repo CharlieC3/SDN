@@ -126,17 +126,17 @@ function WaitForNetwork($NetworkName)
     }
 }
 
-function IsNodeRegistered()
+function IsNodeRegistered($hostName = $(hostname))
 {
-    c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($(hostname).ToLower())
+    c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower())
     return (!$LASTEXITCODE)
 }
 
-function RegisterNode($UseCRI = $false)
+function RegisterNode($UseCRI = $false, $hostName = $(hostname))
 {
-    if (!(IsNodeRegistered))
+    if (!(IsNodeRegistered $hostName))
     {
-        $argList = @("--hostname-override=$(hostname)","--pod-infra-container-image=kubeletwin/pause","--resolv-conf=""""", "--cgroups-per-qos=false", "--enforce-node-allocatable=""""","--kubeconfig=c:\k\config")
+        $argList = @("--hostname-override=$hostName","--pod-infra-container-image=kubeletwin/pause","--resolv-conf=""""", "--cgroups-per-qos=false", "--enforce-node-allocatable=""""","--kubeconfig=c:\k\config")
         if($UseCRI)
         {
             $argList += @("--container-runtime=remote", "--container-runtime-endpoint=npipe:////./pipe/containerd-containerd")
@@ -144,7 +144,7 @@ function RegisterNode($UseCRI = $false)
         $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
 
         # Wait till the 
-        while (!(IsNodeRegistered))
+        while (!(IsNodeRegistered $hostName))
         {
             Write-Host "waiting to discover node registration status"
             Start-Sleep -sec 1
@@ -154,7 +154,7 @@ function RegisterNode($UseCRI = $false)
     }
     else 
     {
-        Write-Host "Node $(hostname) already registered"
+        Write-Host "Node $hostName already registered"
     }
 }
 
@@ -201,9 +201,9 @@ function GetSourceVip($ipaddress, $NetworkName)
     Remove-Item env:CNI_PATH
 }
 
-function Get-PodCIDR()
+function Get-PodCIDR($hostName = $(hostname))
 {
-    return c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($(hostname).ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    return c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
 }
 
 function Get-PodCIDRs()
