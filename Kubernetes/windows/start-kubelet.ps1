@@ -87,7 +87,8 @@ Test-PodCIDR($podCIDR)
 # Main
 
 RegisterNode $false $hostName
-$podCIDR = Get-PodCIDR $hostName
+#$podCIDR = Get-PodCIDR $hostName TODO fix this
+$podCIDR = "10.5.148.0/24"
 
 # startup the service
 $podGW = Get-PodGateway $podCIDR
@@ -96,7 +97,7 @@ ipmo C:\k\hns.psm1
 # Create a L2Bridge to trigger a vSwitch creation. Do this only once
 if(!(Get-HnsNetwork | ? Name -EQ "External"))
 {
-    New-HNSNetwork -Type $NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name "External" -Verbose
+    New-HNSNetwork -Type $NetworkMode -AddressPrefix "172.20.255.0/30" -Gateway "172.20.255.1" -Name "External" -Verbose
 }
 
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $NetworkName.ToLower()

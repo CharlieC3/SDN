@@ -203,12 +203,18 @@ function GetSourceVip($ipaddress, $NetworkName)
 
 function Get-PodCIDR($hostName = $(hostname))
 {
-    return c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    $tmpCidr = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower()) -o custom-columns=podCidr:.status.addresses..address --no-headers | ForEach-Object {
+        $_.split(",")[0]
+    }
+    return $tmpCidr.substring(0,$tmpCidr.lastIndexOf(".")) + ".0/24"
 }
 
 function Get-PodCIDRs()
 {
-    return c:\k\kubectl.exe  --kubeconfig=c:\k\config get nodes -o=custom-columns=Name:.status.nodeInfo.operatingSystem,PODCidr:.spec.podCIDR --no-headers
+    $tmpCidrs = c:\k\kubectl.exe  --kubeconfig=c:\k\config get nodes -o=custom-columns=Name:.status.nodeInfo.operatingSystem,PODCidr:.status.addresses..address --no-headers | ForEach-Object {
+        $_.split(",")[0]
+    }
+    return echo $tmpCidrs | ForEach-Object {$_.substring(0,$_.lastIndexOf(".")) + ".0/24"}
 }
 
 function Get-PodGateway($podCIDR)
