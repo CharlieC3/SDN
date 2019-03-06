@@ -463,7 +463,6 @@ Export-ModuleMember RegisterNode
 Export-ModuleMember WaitForNetwork
 Export-ModuleMember StartFlanneld
 Export-ModuleMember GetSourceVip
-Export-ModuleMember Get-HostIp
 Export-ModuleMember Get-HostName
 Export-ModuleMember Get-MgmtSubnet
 Export-ModuleMember Get-MgmtIpAddress
