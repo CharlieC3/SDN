@@ -126,13 +126,13 @@ function WaitForNetwork($NetworkName)
     }
 }
 
-function IsNodeRegistered($hostName = $(hostname))
+function IsNodeRegistered($hostName)
 {
     c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower())
     return (!$LASTEXITCODE)
 }
 
-function RegisterNode($UseCRI = $false, $hostName = $(hostname))
+function RegisterNode($UseCRI = $false, $hostName)
 {
     if (!(IsNodeRegistered $hostName))
     {
@@ -201,7 +201,13 @@ function GetSourceVip($ipaddress, $NetworkName)
     Remove-Item env:CNI_PATH
 }
 
-function Get-PodCIDR($hostName = $(hostname))
+function Get-HostName()
+{
+    return "ip-$(Get-MgmtIpAddress).replace('.','-')).ec2.internal"
+}
+
+
+function Get-PodCIDR($hostName)
 {
     $tmpCidr = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($hostName.ToLower()) -o custom-columns=podCidr:.status.addresses..address --no-headers | ForEach-Object {
         $_.split(",")[0]
@@ -457,6 +463,8 @@ Export-ModuleMember RegisterNode
 Export-ModuleMember WaitForNetwork
 Export-ModuleMember StartFlanneld
 Export-ModuleMember GetSourceVip
+Export-ModuleMember Get-HostIp
+Export-ModuleMember Get-HostName
 Export-ModuleMember Get-MgmtSubnet
 Export-ModuleMember Get-MgmtIpAddress
 Export-ModuleMember Get-HnsMgmtIpAddress

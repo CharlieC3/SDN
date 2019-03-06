@@ -6,12 +6,13 @@ Param(
     $IsolationType = "process"
 )
 
+ipmo $WorkingDir\helper.psm1
+
 # Todo : Get these values using kubectl
 $KubeDnsSuffix ="svc.cluster.local"
 $KubeDnsServiceIp="172.20.0.10"
 $serviceCIDR="172.20.0.0/16"
-$hostName=$(curl http://169.254.169.254/latest/meta-data/hostname | Select-Object -Expand Content)
-
+$hostName=$(Get-HostName)
 $WorkingDir = "c:\k"
 $CNIPath = [Io.path]::Combine($WorkingDir , "cni")
 $CNIConfig = [Io.path]::Combine($CNIPath, "config", "$NetworkMode.conf")
@@ -19,7 +20,6 @@ $CNIConfig = [Io.path]::Combine($CNIPath, "config", "$NetworkMode.conf")
 $endpointName = "cbr0"
 $vnicName = "vEthernet ($endpointName)"
 
-ipmo $WorkingDir\helper.psm1
 
 function
 Update-CNIConfig($podCIDR)
@@ -38,7 +38,7 @@ Update-CNIConfig($podCIDR)
      }]
   },
   "dns" : {
-    "Nameservers" : [ "11.0.0.10" ],
+    "Nameservers" : [ "172.20.0.10" ],
     "Search": [ "svc.cluster.local" ]
   },
   "AdditionalArgs" : [
@@ -87,8 +87,7 @@ Test-PodCIDR($podCIDR)
 # Main
 
 RegisterNode $false $hostName
-#$podCIDR = Get-PodCIDR $hostName TODO fix this
-$podCIDR = "10.5.148.0/24"
+$podCIDR = Get-PodCIDR $hostName
 
 # startup the service
 $podGW = Get-PodGateway $podCIDR
@@ -107,7 +106,12 @@ if( !$hnsNetwork )
 }
 
 $podEndpointGW = Get-PodEndpointGateway $podCIDR
-$hnsEndpoint = New-HnsEndpoint -NetworkId $hnsNetwork.Id -Name $endpointName -IPAddress $podEndpointGW -Gateway "0.0.0.0" -Verbose
+$hnsEndpoint = Get-HnsEndpoint | ? Name -EQ $endpointName.ToLower()
+if( !$hnsEndpoint )
+{
+    $hnsEndpoint = New-HnsEndpoint -NetworkId $hnsNetwork.Id -Name $endpointName -IPAddress $podEndpointGW -Gateway "0.0.0.0" -Verbose
+}
+
 Attach-HnsHostEndpoint -EndpointID $hnsEndpoint.Id -CompartmentID 1
 
 netsh int ipv4 set int "$vnicName" for=en
