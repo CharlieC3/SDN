@@ -31,11 +31,12 @@ Add-RouteToPodCIDR($nicName, $routeMetric = 300)
     }
 }
 
+$WorkingDir = "c:\k"
+ipmo $WorkingDir\helper.psm1
+
 $endpointName = "cbr0"
 $vnicName = "vEthernet ($endpointName)"
-$WorkingDir = "c:\k"
-
-ipmo $WorkingDir\helper.psm1
+$hostName = $(Get-HostName)
 
 # Add routes to all POD networks on the Bridge endpoint nic
 Add-RouteToPodCIDR -nicName $vnicName -RouteMetric 250
@@ -51,7 +52,7 @@ if (!$na)
 Add-RouteToPodCIDR -nicName $na.InterfaceAlias -RouteMetric 300
 
 # Update the route for the POD on current host to be on Link
-$podCIDR=Get-PodCIDR
+$podCIDR=Get-PodCIDR $hostName
 get-NetRoute -DestinationPrefix $podCIDR  -InterfaceAlias $na.InterfaceAlias | Remove-NetRoute -Confirm:$false
 new-NetRoute -DestinationPrefix $podCIDR -NextHop 0.0.0.0 -InterfaceAlias $na.InterfaceAlias -RouteMetric 300
 

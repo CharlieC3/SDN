@@ -6,6 +6,7 @@ Param(
     $IsolationType = "process"
 )
 
+$WorkingDir = "c:\k"
 ipmo $WorkingDir\helper.psm1
 
 # Todo : Get these values using kubectl
@@ -13,7 +14,6 @@ $KubeDnsSuffix ="svc.cluster.local"
 $KubeDnsServiceIp="172.20.0.10"
 $serviceCIDR="172.20.0.0/16"
 $hostName=$(Get-HostName)
-$WorkingDir = "c:\k"
 $CNIPath = [Io.path]::Combine($WorkingDir , "cni")
 $CNIConfig = [Io.path]::Combine($CNIPath, "config", "$NetworkMode.conf")
 
