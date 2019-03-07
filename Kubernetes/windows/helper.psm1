@@ -201,9 +201,19 @@ function GetSourceVip($ipaddress, $NetworkName)
     Remove-Item env:CNI_PATH
 }
 
+function Get-HostIp()
+{
+    return $(Get-NetIPConfiguration |
+            Where-Object {
+                $_.IPv4DefaultGateway -ne $null -and
+                        $_.NetAdapter.Status -ne "Disconnected"
+            }
+    ).IPv4Address.IPAddress
+}
+
 function Get-HostName()
 {
-    return "ip-$(Get-MgmtIpAddress).replace('.','-')).ec2.internal"
+    return "ip-$($(Get-HostIp).replace('.','-')).ec2.internal"
 }
 
 
@@ -463,6 +473,7 @@ Export-ModuleMember RegisterNode
 Export-ModuleMember WaitForNetwork
 Export-ModuleMember StartFlanneld
 Export-ModuleMember GetSourceVip
+Export-ModuleMember Get-HostIp
 Export-ModuleMember Get-HostName
 Export-ModuleMember Get-MgmtSubnet
 Export-ModuleMember Get-MgmtIpAddress
